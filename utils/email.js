@@ -16,12 +16,14 @@ console.log("Sender Email:", SENDER_EMAIL);
 
 // 2. Create Transporter (SendGrid SMTP)
 const transporter = nodemailer.createTransport({
-  host: "smtp.sendgrid.net",
-  port: 587,
+  host: 'smtp.sendgrid.net', // SendGrid SMTP Host
+  port: 2525,                // SendGrid recommended port
+  secure: false,             // No SSL for 2525
   auth: {
-    user: "apikey", // Strictly use 'apikey'
-    pass: process.env.SENDGRID_API_KEY, // Access the key from the .env file
+    user: process.env.SENDGRID_USER,
+    pass: process.env.SENDGRID_PASS
   },
+  family: 4 // Force IPv4
 });
 
 export const sendStaffCredentials = async (email, name, password) => {
