@@ -12,9 +12,12 @@ console.log("Email User:", process.env.EMAIL_USER ? "Loaded" : "MISSING");
 console.log("Email Pass:", process.env.EMAIL_PASS ? "Loaded" : "MISSING");
 console.log("Frontend URL:", FRONTEND_URL);
 
-// 2. Create Transporter (Using Explicit SMTP Settings like the image)
+// 2. Create Transporter (Updated for STARTTLS)
 const transporter = nodemailer.createTransport({
-  service: 'gmail',           // Use SSL
+  host: 'smtp.gmail.com',
+  port: 587,              // <--- CHANGE THIS (Was 465)
+  secure: false,          // <--- CHANGE THIS (Was true). False means use STARTTLS.
+  requireTLS: true,       // <--- ADD THIS to force security
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS
