@@ -14,9 +14,7 @@ console.log("Frontend URL:", FRONTEND_URL);
 
 // 2. Create Transporter (Using Explicit SMTP Settings like the image)
 const transporter = nodemailer.createTransport({
-  host: 'smtp.gmail.com', // Google's SMTP Host
-  port: 465,              // Secure Port
-  secure: true,           // Use SSL
+  service: 'gmail',           // Use SSL
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS
