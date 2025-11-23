@@ -26,7 +26,19 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 4000;
 
-app.use(cors());
+// CORS configuration for production
+const corsOptions = {
+  origin: [
+    'http://localhost:5173', // Local React development
+    'http://localhost:3000', // Alternative local development port
+    'https://hostel-management-system-ai.netlify.app', // Netlify production URL
+    process.env.FRONTEND_URL // Environment variable fallback
+  ].filter(Boolean), // Remove any undefined values
+  credentials: true,
+  optionsSuccessStatus: 200
+};
+
+app.use(cors(corsOptions));
 app.use(express.json());
 
 app.use('/api/auth', authRoutes);
