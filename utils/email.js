@@ -1,4 +1,4 @@
-import nodemailer from "nodemailer";
+import sgMail from "@sendgrid/mail";
 import dotenv from "dotenv";
 
 // 1. Load environment variables
@@ -14,23 +14,13 @@ const SENDER_EMAIL = process.env.SENDER_EMAIL || "sabeer@giantlabs.in";
 console.log("SendGrid Key:", process.env.SENDGRID_API_KEY ? "Loaded" : "MISSING");
 console.log("Sender Email:", SENDER_EMAIL);
 
-// 2. Create Transporter (SendGrid SMTP)
-const transporter = nodemailer.createTransport({
-  host: 'smtp.sendgrid.net', // SendGrid SMTP Host
-  port: 2525,                // SendGrid recommended port
-  secure: false,             // No SSL for 2525
-  auth: {
-    user: 'apikey', // This is the literal string 'api'
-    pass: process.env.SENDGRID_API_KEY
-  },
-  family: 4 // Force IPv4
-});
+// 2. Configure SendGrid
+sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 export const sendStaffCredentials = async (email, name, password) => {
-  const mailOptions = {
-    // SendGrid allows different names (Hostel Admin) but the email <...> MUST be verified
-    from: `"Hostel Admin" <${SENDER_EMAIL}>`,
+  const msg = {
     to: email,
+    from: SENDER_EMAIL,
     subject: "Welcome to HMS - Your Staff Login Credentials",
     html: `
       <div style="font-family: Arial, sans-serif; padding: 20px; border: 1px solid #eee;">
@@ -45,19 +35,18 @@ export const sendStaffCredentials = async (email, name, password) => {
       </div>
     `,
   };
-
   try {
-    const info = await transporter.sendMail(mailOptions);
-    console.log(`✅ Email sent: ${info.messageId}`);
+    await sgMail.send(msg);
+    console.log(`✅ Email sent to ${email}`);
   } catch (error) {
     console.error("❌ Email failed:", error.message);
   }
 };
 
 export const sendRegistrationAcknowledgement = async (email, name) => {
-  const mailOptions = {
-    from: `"Hostel Admin" <${SENDER_EMAIL}>`,
+  const msg = {
     to: email,
+    from: SENDER_EMAIL,
     subject: "Registration Successful - Welcome to HMS",
     html: `
       <div style="font-family: Arial, sans-serif; padding: 20px; border: 1px solid #eee;">
@@ -69,19 +58,18 @@ export const sendRegistrationAcknowledgement = async (email, name) => {
       </div>
     `,
   };
-
   try {
-    const info = await transporter.sendMail(mailOptions);
-    console.log(`✅ Registration acknowledgement sent: ${info.messageId}`);
+    await sgMail.send(msg);
+    console.log(`✅ Registration acknowledgement sent to ${email}`);
   } catch (error) {
     console.error("❌ Email failed:", error.message);
   }
 };
 
 export const sendBookingConfirmation = async (email, name, pdfBuffer) => {
-  const mailOptions = {
-    from: `"Hostel Admin" <${SENDER_EMAIL}>`,
+  const msg = {
     to: email,
+    from: SENDER_EMAIL,
     subject: "Booking Confirmation - Hostel Management System",
     html: `
       <div style="font-family: Arial, sans-serif; padding: 20px; border: 1px solid #eee;">
@@ -95,26 +83,26 @@ export const sendBookingConfirmation = async (email, name, pdfBuffer) => {
     `,
     attachments: [
       {
+        content: pdfBuffer.toString('base64'),
         filename: "invoice.pdf",
-        content: pdfBuffer,
-        contentType: "application/pdf",
-      },
-    ],
+        type: "application/pdf",
+        disposition: "attachment"
+      }
+    ]
   };
-
   try {
-    const info = await transporter.sendMail(mailOptions);
-    console.log(`✅ Booking confirmation sent: ${info.messageId}`);
+    await sgMail.send(msg);
+    console.log(`✅ Booking confirmation sent to ${email}`);
   } catch (error) {
     console.error("❌ Email failed:", error.message);
-    throw error; // Re-throw to handle in the route
+    throw error;
   }
 };
 
 export const sendDueReminder = async (email, name, amount) => {
-  const mailOptions = {
-    from: `"Hostel Accounts" <${SENDER_EMAIL}>`,
+  const msg = {
     to: email,
+    from: SENDER_EMAIL,
     subject: "Payment Reminder - Outstanding Dues",
     html: `
       <div style="font-family: Arial, sans-serif; padding: 20px; border: 1px solid #eee;">
@@ -129,9 +117,8 @@ export const sendDueReminder = async (email, name, amount) => {
       </div>
     `,
   };
-
   try {
-    await transporter.sendMail(mailOptions);
+    await sgMail.send(msg);
     console.log(`✅ Reminder sent to ${email}`);
   } catch (error) {
     console.error("❌ Email failed:", error.message);
