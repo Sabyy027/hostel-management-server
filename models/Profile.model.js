@@ -12,11 +12,29 @@ const profileSchema = new mongoose.Schema(
     },
     
     // 2. Student-specific data
+    fullName: {
+      type: String,
+      trim: true,
+    },
+    dateOfBirth: {
+      type: Date,
+    },
+    age: {
+      type: Number,
+    },
+    gender: {
+      type: String,
+      enum: ['Male', 'Female', 'Other'],
+    },
     studentId: {
       type: String,
       trim: true,
     },
     phoneNumber: {
+      type: String,
+      trim: true,
+    },
+    altPhone: {
       type: String,
       trim: true,
     },

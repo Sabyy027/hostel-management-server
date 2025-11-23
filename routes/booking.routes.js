@@ -2,8 +2,23 @@ import express from 'express';
 import authMiddleware from '../middleware/auth.middleware.js';
 import Booking from '../models/Booking.model.js';
 import Room from '../models/Room.model.js'; // We need this to update the room status
+import Notification from '../models/Notification.model.js';
 
 const router = express.Router();
+
+// --- CHECK BOOKING STATUS (for Students) ---
+// @route   GET /api/bookings/status
+// @desc    Check if student has any booking
+// @access  Private (Student)
+router.get('/status', authMiddleware, async (req, res) => {
+  try {
+    const booking = await Booking.findOne({ student: req.user.userId });
+    res.json({ hasBooking: !!booking });
+  } catch (error) {
+    console.error('Error checking booking status:', error);
+    res.status(500).json({ message: 'Server error.' });
+  }
+});
 
 // --- GET MY BOOKING (for Students) ---
 // @route   GET /api/bookings/my
@@ -63,6 +78,13 @@ router.post('/', authMiddleware, async (req, res) => {
     // 4. Update the room to be occupied
     room.isOccupied = true;
     await room.save();
+
+    // 5. Create in-app notification for booking confirmation
+    await Notification.create({
+      user: studentId,
+      type: 'Booking',
+      message: `Your room booking has been confirmed! Room Number: ${room.roomNumber}`
+    });
     
     // Populate the room details in the response
     const populatedBooking = await newBooking.populate('room');

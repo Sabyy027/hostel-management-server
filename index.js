@@ -9,6 +9,17 @@ import bookingRoutes from './routes/booking.routes.js';
 import blockRoutes from './routes/block.routes.js';
 import floorRoutes from './routes/floor.routes.js';
 import paymentRoutes from './routes/payment.routes.js';
+import userRoutes from './routes/user.routes.js';
+import queryRoutes from './routes/query.routes.js';
+import reportRoutes from './routes/report.routes.js';
+import notificationRoutes from './routes/notification.routes.js';
+import residentRoutes from './routes/resident.routes.js';
+import serviceRoutes from './routes/service.routes.js';
+import billingRoutes from './routes/billing.routes.js';
+import discountRoutes from './routes/discount.routes.js';
+import expenseRoutes from './routes/expense.routes.js';
+import announcementRoutes from './routes/announcement.routes.js';
+import aiRoutes from './routes/ai.routes.js';
 
 dotenv.config();
 
@@ -25,6 +36,18 @@ app.use('/api/bookings', bookingRoutes);
 app.use('/api/blocks', blockRoutes);
 app.use('/api/floors', floorRoutes);
 app.use('/api/payment', paymentRoutes);
+app.use('/api/users', userRoutes);
+app.use('/api/query', queryRoutes);
+app.use('/api/reports', reportRoutes);
+app.use('/api/notifications', notificationRoutes);
+app.use('/api/resident', residentRoutes);
+app.use('/api/services', serviceRoutes);
+app.use('/api/billing', billingRoutes)
+app.use('/api/discounts', discountRoutes);
+app.use('/api/expenses', expenseRoutes);
+app.use('/api/announcements', announcementRoutes);
+app.use('/api/ai', aiRoutes);
+
 
 
 app.get('/', (req, res) => {

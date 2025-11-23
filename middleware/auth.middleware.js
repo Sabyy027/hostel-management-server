@@ -17,7 +17,11 @@ const authMiddleware = (req, res, next) => {
 
     // 3. Attach the user's info to the request object
     // We can now access `req.user` in any protected route
-    req.user = { userId: decodedPayload.userId, username: decodedPayload.username, role: decodedPayload.role };
+    req.user = { 
+      userId: decodedPayload.userId, 
+      username: decodedPayload.username, 
+      role: decodedPayload.role
+    };
     
     // 4. Pass control to the next function (the route handler)
     next();
@@ -31,6 +35,23 @@ const authMiddleware = (req, res, next) => {
     }
     res.status(500).json({ message: 'Server error during token validation.' });
   }
+};
+
+// Middleware for routes accessible by both Admin and Warden
+export const managerOnly = (req, res, next) => {
+  if (req.user.role === 'admin' || req.user.role === 'warden') {
+    next();
+  } else {
+    return res.status(403).json({ message: 'Access denied. Managers only.' });
+  }
+};
+
+// Middleware for routes accessible ONLY by Admin
+export const adminOnly = (req, res, next) => {
+  if (req.user.role !== 'admin') {
+    return res.status(403).json({ message: 'Access denied. Admin only.' });
+  }
+  next();
 };
 
 export default authMiddleware;

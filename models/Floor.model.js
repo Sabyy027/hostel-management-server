@@ -25,7 +25,13 @@ const floorSchema = new mongoose.Schema(
       enum: ['AC', 'Non-AC'], 
       default: 'Non-AC' 
     },
-    commonToilets: { type: Number, default: 2 }
+    commonToilets: { type: Number, default: 2 },
+    // --- RT ASSIGNMENT ---
+    assignedRT: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      default: null
+    }
   },
   { timestamps: true }
 );

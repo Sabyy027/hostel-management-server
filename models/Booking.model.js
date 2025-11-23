@@ -2,41 +2,47 @@ import mongoose from 'mongoose';
 
 const bookingSchema = new mongoose.Schema(
   {
-    // Link to the student (User)
-    student: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
-      required: true,
-      unique: true, // A student can only have one active booking
+    student: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+    room: { type: mongoose.Schema.Types.ObjectId, ref: 'Room', required: true },
+    
+    // Financials
+    totalAmount: { type: Number, required: true },
+    paymentStatus: {
+      type: String,
+      enum: ['Pending', 'Paid', 'Failed'],
+      default: 'Pending'
     },
-    // Link to the room
-    room: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Room',
-      required: true,
-    },
-    checkInDate: {
-      type: Date,
-      required: true,
-      default: Date.now,
-    },
-    checkOutDate: {
-      type: Date,
-      // You could make this required or optional
-    },
+
+    // Lifecycle Status
     status: {
       type: String,
-      enum: ['pending', 'active', 'checked-out'],
-      default: 'active',
+      // --- FIX: ADDED 'Pending' TO THIS LIST ---
+      enum: ['Pending', 'Active', 'CheckedIn', 'CheckedOut', 'Cancelled'], 
+      default: 'Pending',
     },
-    // This is important: We'll also mark the room as occupied
-    // We can handle this logic in the API route
+
+    // Dates & Details
+    checkInDate: Date, 
+    checkOutDate: Date,
+    academicYear: { type: String, default: '2025-2026' },
+    duration: String, // To store "6 months" or "1 year"
+
+    // Resident Details (from registration form)
+    residentDetails: {
+      fullName: String,
+      dob: Date,
+      gender: { type: String, enum: ['Male', 'Female', 'Other'] },
+      mobileNumber: String,
+      altPhone: String,
+      address: String,
+      street: String,
+      city: String,
+      state: String,
+      pincode: String
+    }
   },
-  {
-    timestamps: true,
-  }
+  { timestamps: true }
 );
 
 const Booking = mongoose.model('Booking', bookingSchema);
-
 export default Booking;
