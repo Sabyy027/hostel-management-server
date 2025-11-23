@@ -12,16 +12,16 @@ console.log("Email User:", process.env.EMAIL_USER ? "Loaded" : "MISSING");
 console.log("Email Pass:", process.env.EMAIL_PASS ? "Loaded" : "MISSING");
 console.log("Frontend URL:", FRONTEND_URL);
 
-// 2. Create Transporter (Updated for STARTTLS)
+// 2. Create Transporter (Force IPv4 for cloud servers)
 const transporter = nodemailer.createTransport({
-  host: 'smtp.gmail.com',
-  port: 587,              // <--- CHANGE THIS (Was 465)
-  secure: false,          // <--- CHANGE THIS (Was true). False means use STARTTLS.
-  requireTLS: true,       // <--- ADD THIS to force security
+  service: 'gmail',
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS
-  }
+  },
+  // --- FIX: FORCE IPv4 ---
+  // This solves the ETIMEDOUT on cloud servers like Render
+  family: 4 
 });
 
 export const sendStaffCredentials = async (email, name, password) => {
