@@ -20,8 +20,8 @@ const transporter = nodemailer.createTransport({
   port: 2525,                // SendGrid recommended port
   secure: false,             // No SSL for 2525
   auth: {
-    user: process.env.SENDGRID_USER,
-    pass: process.env.SENDGRID_PASS
+    user: 'apikey', // This is the literal string 'api'
+    pass: process.env.SENDGRID_API_KEY
   },
   family: 4 // Force IPv4
 });
