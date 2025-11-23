@@ -7,12 +7,14 @@ dotenv.config();
 // Frontend URL for email links
 const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5173";
 
-// Debug: Check if variables are loaded (Will print to terminal)
-console.log("Email User:", process.env.EMAIL_USER ? "Loaded" : "MISSING");
-console.log("Email Pass:", process.env.EMAIL_PASS ? "Loaded" : "MISSING");
-console.log("Frontend URL:", FRONTEND_URL);
+// CRITICAL: This must match your SendGrid Verified Sender Identity
+const SENDER_EMAIL = process.env.SENDER_EMAIL || "sabeer@giantlabs.in"; 
 
-// 2. Create Transporter (Force IPv4 for cloud servers)
+// Debug: Check if variables are loaded
+console.log("SendGrid Key:", process.env.SENDGRID_API_KEY ? "Loaded" : "MISSING");
+console.log("Sender Email:", SENDER_EMAIL);
+
+// 2. Create Transporter (SendGrid SMTP)
 const transporter = nodemailer.createTransport({
   host: "smtp.sendgrid.net",
   port: 587,
@@ -24,7 +26,8 @@ const transporter = nodemailer.createTransport({
 
 export const sendStaffCredentials = async (email, name, password) => {
   const mailOptions = {
-    from: `"Hostel Admin" <${process.env.EMAIL_USER}>`,
+    // SendGrid allows different names (Hostel Admin) but the email <...> MUST be verified
+    from: `"Hostel Admin" <${SENDER_EMAIL}>`,
     to: email,
     subject: "Welcome to HMS - Your Staff Login Credentials",
     html: `
@@ -51,7 +54,7 @@ export const sendStaffCredentials = async (email, name, password) => {
 
 export const sendRegistrationAcknowledgement = async (email, name) => {
   const mailOptions = {
-    from: `"Hostel Admin" <${process.env.EMAIL_USER}>`,
+    from: `"Hostel Admin" <${SENDER_EMAIL}>`,
     to: email,
     subject: "Registration Successful - Welcome to HMS",
     html: `
@@ -75,7 +78,7 @@ export const sendRegistrationAcknowledgement = async (email, name) => {
 
 export const sendBookingConfirmation = async (email, name, pdfBuffer) => {
   const mailOptions = {
-    from: `"Hostel Admin" <${process.env.EMAIL_USER}>`,
+    from: `"Hostel Admin" <${SENDER_EMAIL}>`,
     to: email,
     subject: "Booking Confirmation - Hostel Management System",
     html: `
@@ -108,7 +111,7 @@ export const sendBookingConfirmation = async (email, name, pdfBuffer) => {
 
 export const sendDueReminder = async (email, name, amount) => {
   const mailOptions = {
-    from: `"Hostel Accounts" <${process.env.EMAIL_USER}>`,
+    from: `"Hostel Accounts" <${SENDER_EMAIL}>`,
     to: email,
     subject: "Payment Reminder - Outstanding Dues",
     html: `
@@ -146,7 +149,7 @@ export const sendTicketCreatedEmail = async (email, name, ticketDetails) => {
   };
 
   const mailOptions = {
-    from: `"Hostel Maintenance" <${process.env.EMAIL_USER}>`,
+    from: `"Hostel Maintenance" <${SENDER_EMAIL}>`,
     to: email,
     subject: `Maintenance Ticket Created - ${title}`,
     html: `
@@ -204,7 +207,7 @@ export const sendTicketStatusUpdateEmail = async (
   };
 
   const mailOptions = {
-    from: `"Hostel Maintenance" <${process.env.EMAIL_USER}>`,
+    from: `"Hostel Maintenance" <${SENDER_EMAIL}>`,
     to: email,
     subject: `Ticket Update: ${title} - ${status}`,
     html: `
@@ -268,7 +271,7 @@ export const sendTicketAssignedToStaffEmail = async (
   };
 
   const mailOptions = {
-    from: `"Hostel Admin" <${process.env.EMAIL_USER}>`,
+    from: `"Hostel Admin" <${SENDER_EMAIL}>`,
     to: email,
     subject: `New Ticket Assigned - ${title}`,
     html: `
@@ -356,7 +359,7 @@ export const sendServicePurchaseEmail = async (
   }
 
   const mailOptions = {
-    from: `"Hostel Services" <${process.env.EMAIL_USER}>`,
+    from: `"Hostel Services" <${SENDER_EMAIL}>`,
     to: email,
     subject: `Service Activated - ${serviceName}`,
     html: `
@@ -403,7 +406,7 @@ export const sendFineNotificationEmail = async (email, name, fineDetails) => {
   const { description, amount, dueDate, invoiceId } = fineDetails;
 
   const mailOptions = {
-    from: `"Hostel Accounts" <${process.env.EMAIL_USER}>`,
+    from: `"Hostel Accounts" <${SENDER_EMAIL}>`,
     to: email,
     subject: `Fine Issued - Payment Required`,
     html: `
@@ -448,7 +451,7 @@ export const sendFinePaymentConfirmationEmail = async (
   const { description, amount, invoiceId, paidAt } = paymentDetails;
 
   const mailOptions = {
-    from: `"Hostel Accounts" <${process.env.EMAIL_USER}>`,
+    from: `"Hostel Accounts" <${SENDER_EMAIL}>`,
     to: email,
     subject: `Payment Received - ${description}`,
     html: `
@@ -489,7 +492,7 @@ export const sendPasswordResetEmail = async (email, name, resetToken) => {
   const resetUrl = `${FRONTEND_URL}/reset-password/${resetToken}`;
 
   const mailOptions = {
-    from: `"HMS Support" <${process.env.EMAIL_USER}>`,
+    from: `"HMS Support" <${SENDER_EMAIL}>`,
     to: email,
     subject: "Password Reset Request - HMS",
     html: `
@@ -528,7 +531,7 @@ export const sendPasswordResetEmail = async (email, name, resetToken) => {
 
 export const sendPasswordChangedConfirmationEmail = async (email, name) => {
   const mailOptions = {
-    from: `"HMS Support" <${process.env.EMAIL_USER}>`,
+    from: `"HMS Support" <${SENDER_EMAIL}>`,
     to: email,
     subject: "Password Changed Successfully - HMS",
     html: `
