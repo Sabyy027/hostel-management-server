@@ -1,11 +1,11 @@
-import nodemailer from 'nodemailer';
-import dotenv from 'dotenv';
+import nodemailer from "nodemailer";
+import dotenv from "dotenv";
 
 // 1. Load environment variables
-dotenv.config(); 
+dotenv.config();
 
 // Frontend URL for email links
-const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
+const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5173";
 
 // Debug: Check if variables are loaded (Will print to terminal)
 console.log("Email User:", process.env.EMAIL_USER ? "Loaded" : "MISSING");
@@ -14,21 +14,19 @@ console.log("Frontend URL:", FRONTEND_URL);
 
 // 2. Create Transporter (Force IPv4 for cloud servers)
 const transporter = nodemailer.createTransport({
-  service: 'gmail',
+  host: "smtp.sendgrid.net",
+  port: 587,
   auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS
+    user: "apikey", // Strictly use 'apikey'
+    pass: process.env.SENDGRID_API_KEY, // Access the key from the .env file
   },
-  // --- FIX: FORCE IPv4 ---
-  // This solves the ETIMEDOUT on cloud servers like Render
-  family: 4 
 });
 
 export const sendStaffCredentials = async (email, name, password) => {
   const mailOptions = {
     from: `"Hostel Admin" <${process.env.EMAIL_USER}>`,
     to: email,
-    subject: 'Welcome to HMS - Your Staff Login Credentials',
+    subject: "Welcome to HMS - Your Staff Login Credentials",
     html: `
       <div style="font-family: Arial, sans-serif; padding: 20px; border: 1px solid #eee;">
         <h2>Welcome, ${name}!</h2>
@@ -40,7 +38,7 @@ export const sendStaffCredentials = async (email, name, password) => {
         <p style="color: red;">Please login and change your password immediately.</p>
         <p>Regards,<br/>Hostel Administration</p>
       </div>
-    `
+    `,
   };
 
   try {
@@ -55,7 +53,7 @@ export const sendRegistrationAcknowledgement = async (email, name) => {
   const mailOptions = {
     from: `"Hostel Admin" <${process.env.EMAIL_USER}>`,
     to: email,
-    subject: 'Registration Successful - Welcome to HMS',
+    subject: "Registration Successful - Welcome to HMS",
     html: `
       <div style="font-family: Arial, sans-serif; padding: 20px; border: 1px solid #eee;">
         <h2>Welcome, ${name}!</h2>
@@ -64,7 +62,7 @@ export const sendRegistrationAcknowledgement = async (email, name) => {
         <p>If you have any questions, please contact the administration.</p>
         <p>Regards,<br/>Hostel Administration</p>
       </div>
-    `
+    `,
   };
 
   try {
@@ -79,7 +77,7 @@ export const sendBookingConfirmation = async (email, name, pdfBuffer) => {
   const mailOptions = {
     from: `"Hostel Admin" <${process.env.EMAIL_USER}>`,
     to: email,
-    subject: 'Booking Confirmation - Hostel Management System',
+    subject: "Booking Confirmation - Hostel Management System",
     html: `
       <div style="font-family: Arial, sans-serif; padding: 20px; border: 1px solid #eee;">
         <h2>Dear ${name},</h2>
@@ -92,11 +90,11 @@ export const sendBookingConfirmation = async (email, name, pdfBuffer) => {
     `,
     attachments: [
       {
-        filename: 'invoice.pdf',
+        filename: "invoice.pdf",
         content: pdfBuffer,
-        contentType: 'application/pdf'
-      }
-    ]
+        contentType: "application/pdf",
+      },
+    ],
   };
 
   try {
@@ -112,7 +110,7 @@ export const sendDueReminder = async (email, name, amount) => {
   const mailOptions = {
     from: `"Hostel Accounts" <${process.env.EMAIL_USER}>`,
     to: email,
-    subject: 'Payment Reminder - Outstanding Dues',
+    subject: "Payment Reminder - Outstanding Dues",
     html: `
       <div style="font-family: Arial, sans-serif; padding: 20px; border: 1px solid #eee;">
         <h2 style="color: #d97706;">Payment Reminder</h2>
@@ -124,7 +122,7 @@ export const sendDueReminder = async (email, name, amount) => {
         <br/><br/>
         <p>Regards,<br/>Hostel Administration</p>
       </div>
-    `
+    `,
   };
 
   try {
@@ -139,12 +137,12 @@ export const sendDueReminder = async (email, name, amount) => {
 
 export const sendTicketCreatedEmail = async (email, name, ticketDetails) => {
   const { title, category, priority, ticketId } = ticketDetails;
-  
+
   const priorityColors = {
-    'Emergency': '#dc2626',
-    'High': '#ea580c',
-    'Medium': '#d97706',
-    'Low': '#65a30d'
+    Emergency: "#dc2626",
+    High: "#ea580c",
+    Medium: "#d97706",
+    Low: "#65a30d",
   };
 
   const mailOptions = {
@@ -157,11 +155,15 @@ export const sendTicketCreatedEmail = async (email, name, ticketDetails) => {
         <p>Dear ${name},</p>
         <p>Your maintenance request has been received and will be addressed shortly.</p>
         
-        <div style="background: #f9fafb; padding: 15px; border-radius: 8px; margin: 20px 0; border-left: 4px solid ${priorityColors[priority] || '#6b7280'};">
+        <div style="background: #f9fafb; padding: 15px; border-radius: 8px; margin: 20px 0; border-left: 4px solid ${
+          priorityColors[priority] || "#6b7280"
+        };">
           <p style="margin: 5px 0;"><strong>Ticket ID:</strong> ${ticketId}</p>
           <p style="margin: 5px 0;"><strong>Title:</strong> ${title}</p>
           <p style="margin: 5px 0;"><strong>Category:</strong> ${category}</p>
-          <p style="margin: 5px 0;"><strong>Priority:</strong> <span style="color: ${priorityColors[priority]}; font-weight: bold;">${priority}</span></p>
+          <p style="margin: 5px 0;"><strong>Priority:</strong> <span style="color: ${
+            priorityColors[priority]
+          }; font-weight: bold;">${priority}</span></p>
         </div>
         
         <p>You will receive updates via email and in-app notifications as your request progresses.</p>
@@ -169,7 +171,7 @@ export const sendTicketCreatedEmail = async (email, name, ticketDetails) => {
         <br/>
         <p>Regards,<br/>Hostel Maintenance Team</p>
       </div>
-    `
+    `,
   };
 
   try {
@@ -180,21 +182,25 @@ export const sendTicketCreatedEmail = async (email, name, ticketDetails) => {
   }
 };
 
-export const sendTicketStatusUpdateEmail = async (email, name, ticketDetails) => {
+export const sendTicketStatusUpdateEmail = async (
+  email,
+  name,
+  ticketDetails
+) => {
   const { title, status, ticketId, assignedStaff } = ticketDetails;
-  
+
   const statusColors = {
-    'Assigned': '#3b82f6',
-    'In Progress': '#f59e0b',
-    'Resolved': '#10b981',
-    'Pending': '#6b7280'
+    Assigned: "#3b82f6",
+    "In Progress": "#f59e0b",
+    Resolved: "#10b981",
+    Pending: "#6b7280",
   };
 
   const statusMessages = {
-    'Assigned': 'has been assigned to our maintenance staff',
-    'In Progress': 'is currently being worked on',
-    'Resolved': 'has been successfully resolved',
-    'Pending': 'is awaiting review'
+    Assigned: "has been assigned to our maintenance staff",
+    "In Progress": "is currently being worked on",
+    Resolved: "has been successfully resolved",
+    Pending: "is awaiting review",
   };
 
   const mailOptions = {
@@ -205,18 +211,29 @@ export const sendTicketStatusUpdateEmail = async (email, name, ticketDetails) =>
       <div style="font-family: Arial, sans-serif; padding: 20px; border: 1px solid #eee;">
         <h2 style="color: ${statusColors[status]};">Ticket Status Updated</h2>
         <p>Dear ${name},</p>
-        <p>Your maintenance ticket <strong>${statusMessages[status] || 'has been updated'}</strong>.</p>
+        <p>Your maintenance ticket <strong>${
+          statusMessages[status] || "has been updated"
+        }</strong>.</p>
         
-        <div style="background: #f9fafb; padding: 15px; border-radius: 8px; margin: 20px 0; border-left: 4px solid ${statusColors[status]};">
+        <div style="background: #f9fafb; padding: 15px; border-radius: 8px; margin: 20px 0; border-left: 4px solid ${
+          statusColors[status]
+        };">
           <p style="margin: 5px 0;"><strong>Ticket ID:</strong> ${ticketId}</p>
           <p style="margin: 5px 0;"><strong>Title:</strong> ${title}</p>
-          <p style="margin: 5px 0;"><strong>Status:</strong> <span style="color: ${statusColors[status]}; font-weight: bold;">${status}</span></p>
-          ${assignedStaff ? `<p style="margin: 5px 0;"><strong>Assigned To:</strong> ${assignedStaff}</p>` : ''}
+          <p style="margin: 5px 0;"><strong>Status:</strong> <span style="color: ${
+            statusColors[status]
+          }; font-weight: bold;">${status}</span></p>
+          ${
+            assignedStaff
+              ? `<p style="margin: 5px 0;"><strong>Assigned To:</strong> ${assignedStaff}</p>`
+              : ""
+          }
         </div>
         
-        ${status === 'Resolved' 
-          ? '<p style="color: #10b981; font-weight: bold;">✓ Your issue has been resolved. Thank you for your patience!</p>' 
-          : '<p>We will keep you updated on any further progress.</p>'
+        ${
+          status === "Resolved"
+            ? '<p style="color: #10b981; font-weight: bold;">✓ Your issue has been resolved. Thank you for your patience!</p>'
+            : "<p>We will keep you updated on any further progress.</p>"
         }
         
         <br/>
@@ -224,7 +241,7 @@ export const sendTicketStatusUpdateEmail = async (email, name, ticketDetails) =>
         <br/><br/>
         <p>Regards,<br/>Hostel Maintenance Team</p>
       </div>
-    `
+    `,
   };
 
   try {
@@ -235,14 +252,19 @@ export const sendTicketStatusUpdateEmail = async (email, name, ticketDetails) =>
   }
 };
 
-export const sendTicketAssignedToStaffEmail = async (email, staffName, ticketDetails) => {
-  const { title, category, priority, description, roomNumber, studentName } = ticketDetails;
-  
+export const sendTicketAssignedToStaffEmail = async (
+  email,
+  staffName,
+  ticketDetails
+) => {
+  const { title, category, priority, description, roomNumber, studentName } =
+    ticketDetails;
+
   const priorityColors = {
-    'Emergency': '#dc2626',
-    'High': '#ea580c',
-    'Medium': '#d97706',
-    'Low': '#65a30d'
+    Emergency: "#dc2626",
+    High: "#ea580c",
+    Medium: "#d97706",
+    Low: "#65a30d",
   };
 
   const mailOptions = {
@@ -271,7 +293,7 @@ export const sendTicketAssignedToStaffEmail = async (email, staffName, ticketDet
         <br/><br/>
         <p>Regards,<br/>Hostel Administration</p>
       </div>
-    `
+    `,
   };
 
   try {
@@ -284,11 +306,25 @@ export const sendTicketAssignedToStaffEmail = async (email, staffName, ticketDet
 
 // --- SERVICE & FINE EMAILS ---
 
-export const sendServicePurchaseEmail = async (email, name, serviceDetails, pdfAttachment = null, attachmentName = null) => {
-  const { serviceName, price, period, validUntil, invoiceId, credentials, serviceType } = serviceDetails;
-  
+export const sendServicePurchaseEmail = async (
+  email,
+  name,
+  serviceDetails,
+  pdfAttachment = null,
+  attachmentName = null
+) => {
+  const {
+    serviceName,
+    price,
+    period,
+    validUntil,
+    invoiceId,
+    credentials,
+    serviceType,
+  } = serviceDetails;
+
   // Build credentials section if provided
-  let credentialsHtml = '';
+  let credentialsHtml = "";
   if (credentials) {
     credentialsHtml = `
       <div style="background: #fef3c7; padding: 15px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #f59e0b;">
@@ -300,8 +336,8 @@ export const sendServicePurchaseEmail = async (email, name, serviceDetails, pdfA
   }
 
   // Special message for Mess service
-  let specialMessage = '';
-  if (serviceType === 'Mess') {
+  let specialMessage = "";
+  if (serviceType === "Mess") {
     specialMessage = `
       <div style="background: #dbeafe; padding: 15px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #3b82f6;">
         <p style="margin: 5px 0; color: #1e40af;"><strong>📋 Mess Pass Attached</strong></p>
@@ -313,9 +349,9 @@ export const sendServicePurchaseEmail = async (email, name, serviceDetails, pdfA
   const attachments = [];
   if (pdfAttachment) {
     attachments.push({
-      filename: attachmentName || 'Mess_Pass.pdf',
+      filename: attachmentName || "Mess_Pass.pdf",
       content: pdfAttachment,
-      contentType: 'application/pdf'
+      contentType: "application/pdf",
     });
   }
 
@@ -333,7 +369,11 @@ export const sendServicePurchaseEmail = async (email, name, serviceDetails, pdfA
           <p style="margin: 5px 0;"><strong>Service:</strong> ${serviceName}</p>
           <p style="margin: 5px 0;"><strong>Amount Paid:</strong> ₹${price}</p>
           <p style="margin: 5px 0;"><strong>Period:</strong> ${period}</p>
-          ${validUntil ? `<p style="margin: 5px 0;"><strong>Valid Until:</strong> ${validUntil}</p>` : ''}
+          ${
+            validUntil
+              ? `<p style="margin: 5px 0;"><strong>Valid Until:</strong> ${validUntil}</p>`
+              : ""
+          }
           <p style="margin: 5px 0;"><strong>Invoice ID:</strong> ${invoiceId}</p>
         </div>
         
@@ -348,7 +388,7 @@ export const sendServicePurchaseEmail = async (email, name, serviceDetails, pdfA
         <p>Regards,<br/>Hostel Services Team</p>
       </div>
     `,
-    attachments: attachments
+    attachments: attachments,
   };
 
   try {
@@ -361,7 +401,7 @@ export const sendServicePurchaseEmail = async (email, name, serviceDetails, pdfA
 
 export const sendFineNotificationEmail = async (email, name, fineDetails) => {
   const { description, amount, dueDate, invoiceId } = fineDetails;
-  
+
   const mailOptions = {
     from: `"Hostel Accounts" <${process.env.EMAIL_USER}>`,
     to: email,
@@ -389,7 +429,7 @@ export const sendFineNotificationEmail = async (email, name, fineDetails) => {
         <br/>
         <p>Regards,<br/>Hostel Accounts</p>
       </div>
-    `
+    `,
   };
 
   try {
@@ -400,9 +440,13 @@ export const sendFineNotificationEmail = async (email, name, fineDetails) => {
   }
 };
 
-export const sendFinePaymentConfirmationEmail = async (email, name, paymentDetails) => {
+export const sendFinePaymentConfirmationEmail = async (
+  email,
+  name,
+  paymentDetails
+) => {
   const { description, amount, invoiceId, paidAt } = paymentDetails;
-  
+
   const mailOptions = {
     from: `"Hostel Accounts" <${process.env.EMAIL_USER}>`,
     to: email,
@@ -428,7 +472,7 @@ export const sendFinePaymentConfirmationEmail = async (email, name, paymentDetai
         <br/><br/>
         <p>Regards,<br/>Hostel Accounts</p>
       </div>
-    `
+    `,
   };
 
   try {
@@ -443,11 +487,11 @@ export const sendFinePaymentConfirmationEmail = async (email, name, paymentDetai
 
 export const sendPasswordResetEmail = async (email, name, resetToken) => {
   const resetUrl = `${FRONTEND_URL}/reset-password/${resetToken}`;
-  
+
   const mailOptions = {
     from: `"HMS Support" <${process.env.EMAIL_USER}>`,
     to: email,
-    subject: 'Password Reset Request - HMS',
+    subject: "Password Reset Request - HMS",
     html: `
       <div style="font-family: Arial, sans-serif; padding: 20px; border: 1px solid #eee;">
         <h2 style="color: #3b82f6;">Password Reset Request</h2>
@@ -470,7 +514,7 @@ export const sendPasswordResetEmail = async (email, name, resetToken) => {
         <br/>
         <p>Regards,<br/>HMS Support Team</p>
       </div>
-    `
+    `,
   };
 
   try {
@@ -486,7 +530,7 @@ export const sendPasswordChangedConfirmationEmail = async (email, name) => {
   const mailOptions = {
     from: `"HMS Support" <${process.env.EMAIL_USER}>`,
     to: email,
-    subject: 'Password Changed Successfully - HMS',
+    subject: "Password Changed Successfully - HMS",
     html: `
       <div style="font-family: Arial, sans-serif; padding: 20px; border: 1px solid #eee;">
         <h2 style="color: #10b981;">✓ Password Changed Successfully</h2>
@@ -505,7 +549,7 @@ export const sendPasswordChangedConfirmationEmail = async (email, name) => {
         <br/><br/>
         <p>Regards,<br/>HMS Support Team</p>
       </div>
-    `
+    `,
   };
 
   try {
