@@ -8,7 +8,7 @@ dotenv.config();
 const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5173";
 
 // CRITICAL: This must match your SendGrid Verified Sender Identity
-const SENDER_EMAIL = process.env.SENDER_EMAIL || "sabeer@giantlabs.in"; 
+const SENDER_EMAIL = process.env.SENDER_EMAIL || "sabeer@giantlabs.in";
 
 // Debug: Check if variables are loaded
 console.log("SendGrid Key:", process.env.SENDGRID_API_KEY ? "Loaded" : "MISSING");
@@ -16,6 +16,8 @@ console.log("Sender Email:", SENDER_EMAIL);
 
 // 2. Configure SendGrid
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+
+// --- STAFF & REGISTRATION EMAILS ---
 
 export const sendStaffCredentials = async (email, name, password) => {
   const msg = {
@@ -66,6 +68,8 @@ export const sendRegistrationAcknowledgement = async (email, name) => {
   }
 };
 
+// --- BOOKING & DUES EMAILS ---
+
 export const sendBookingConfirmation = async (email, name, pdfBuffer) => {
   const msg = {
     to: email,
@@ -83,7 +87,7 @@ export const sendBookingConfirmation = async (email, name, pdfBuffer) => {
     `,
     attachments: [
       {
-        content: pdfBuffer.toString('base64'),
+        content: pdfBuffer.toString('base64'), // SendGrid requires Base64 string
         filename: "invoice.pdf",
         type: "application/pdf",
         disposition: "attachment"
@@ -137,8 +141,8 @@ export const sendTicketCreatedEmail = async (email, name, ticketDetails) => {
     Low: "#65a30d",
   };
 
-  const mailOptions = {
-    from: `"Hostel Maintenance" <${SENDER_EMAIL}>`,
+  const msg = {
+    from: { email: SENDER_EMAIL, name: "Hostel Maintenance" }, // Correct SendGrid format
     to: email,
     subject: `Maintenance Ticket Created - ${title}`,
     html: `
@@ -147,15 +151,11 @@ export const sendTicketCreatedEmail = async (email, name, ticketDetails) => {
         <p>Dear ${name},</p>
         <p>Your maintenance request has been received and will be addressed shortly.</p>
         
-        <div style="background: #f9fafb; padding: 15px; border-radius: 8px; margin: 20px 0; border-left: 4px solid ${
-          priorityColors[priority] || "#6b7280"
-        };">
+        <div style="background: #f9fafb; padding: 15px; border-radius: 8px; margin: 20px 0; border-left: 4px solid ${priorityColors[priority] || "#6b7280"};">
           <p style="margin: 5px 0;"><strong>Ticket ID:</strong> ${ticketId}</p>
           <p style="margin: 5px 0;"><strong>Title:</strong> ${title}</p>
           <p style="margin: 5px 0;"><strong>Category:</strong> ${category}</p>
-          <p style="margin: 5px 0;"><strong>Priority:</strong> <span style="color: ${
-            priorityColors[priority]
-          }; font-weight: bold;">${priority}</span></p>
+          <p style="margin: 5px 0;"><strong>Priority:</strong> <span style="color: ${priorityColors[priority]}; font-weight: bold;">${priority}</span></p>
         </div>
         
         <p>You will receive updates via email and in-app notifications as your request progresses.</p>
@@ -167,18 +167,14 @@ export const sendTicketCreatedEmail = async (email, name, ticketDetails) => {
   };
 
   try {
-    await transporter.sendMail(mailOptions);
+    await sgMail.send(msg);
     console.log(`✅ Ticket created email sent to ${email}`);
   } catch (error) {
     console.error("❌ Ticket email failed:", error.message);
   }
 };
 
-export const sendTicketStatusUpdateEmail = async (
-  email,
-  name,
-  ticketDetails
-) => {
+export const sendTicketStatusUpdateEmail = async (email, name, ticketDetails) => {
   const { title, status, ticketId, assignedStaff } = ticketDetails;
 
   const statusColors = {
@@ -195,37 +191,26 @@ export const sendTicketStatusUpdateEmail = async (
     Pending: "is awaiting review",
   };
 
-  const mailOptions = {
-    from: `"Hostel Maintenance" <${SENDER_EMAIL}>`,
+  const msg = {
+    from: { email: SENDER_EMAIL, name: "Hostel Maintenance" },
     to: email,
     subject: `Ticket Update: ${title} - ${status}`,
     html: `
       <div style="font-family: Arial, sans-serif; padding: 20px; border: 1px solid #eee;">
         <h2 style="color: ${statusColors[status]};">Ticket Status Updated</h2>
         <p>Dear ${name},</p>
-        <p>Your maintenance ticket <strong>${
-          statusMessages[status] || "has been updated"
-        }</strong>.</p>
+        <p>Your maintenance ticket <strong>${statusMessages[status] || "has been updated"}</strong>.</p>
         
-        <div style="background: #f9fafb; padding: 15px; border-radius: 8px; margin: 20px 0; border-left: 4px solid ${
-          statusColors[status]
-        };">
+        <div style="background: #f9fafb; padding: 15px; border-radius: 8px; margin: 20px 0; border-left: 4px solid ${statusColors[status]};">
           <p style="margin: 5px 0;"><strong>Ticket ID:</strong> ${ticketId}</p>
           <p style="margin: 5px 0;"><strong>Title:</strong> ${title}</p>
-          <p style="margin: 5px 0;"><strong>Status:</strong> <span style="color: ${
-            statusColors[status]
-          }; font-weight: bold;">${status}</span></p>
-          ${
-            assignedStaff
-              ? `<p style="margin: 5px 0;"><strong>Assigned To:</strong> ${assignedStaff}</p>`
-              : ""
-          }
+          <p style="margin: 5px 0;"><strong>Status:</strong> <span style="color: ${statusColors[status]}; font-weight: bold;">${status}</span></p>
+          ${assignedStaff ? `<p style="margin: 5px 0;"><strong>Assigned To:</strong> ${assignedStaff}</p>` : ""}
         </div>
         
-        ${
-          status === "Resolved"
-            ? '<p style="color: #10b981; font-weight: bold;">✓ Your issue has been resolved. Thank you for your patience!</p>'
-            : "<p>We will keep you updated on any further progress.</p>"
+        ${status === "Resolved"
+          ? '<p style="color: #10b981; font-weight: bold;">✓ Your issue has been resolved. Thank you for your patience!</p>'
+          : "<p>We will keep you updated on any further progress.</p>"
         }
         
         <br/>
@@ -237,20 +222,15 @@ export const sendTicketStatusUpdateEmail = async (
   };
 
   try {
-    await transporter.sendMail(mailOptions);
+    await sgMail.send(msg);
     console.log(`✅ Status update email sent to ${email}`);
   } catch (error) {
     console.error("❌ Status update email failed:", error.message);
   }
 };
 
-export const sendTicketAssignedToStaffEmail = async (
-  email,
-  staffName,
-  ticketDetails
-) => {
-  const { title, category, priority, description, roomNumber, studentName } =
-    ticketDetails;
+export const sendTicketAssignedToStaffEmail = async (email, staffName, ticketDetails) => {
+  const { title, category, priority, description, roomNumber, studentName } = ticketDetails;
 
   const priorityColors = {
     Emergency: "#dc2626",
@@ -259,8 +239,8 @@ export const sendTicketAssignedToStaffEmail = async (
     Low: "#65a30d",
   };
 
-  const mailOptions = {
-    from: `"Hostel Admin" <${SENDER_EMAIL}>`,
+  const msg = {
+    from: { email: SENDER_EMAIL, name: "Hostel Admin" },
     to: email,
     subject: `New Ticket Assigned - ${title}`,
     html: `
@@ -289,7 +269,7 @@ export const sendTicketAssignedToStaffEmail = async (
   };
 
   try {
-    await transporter.sendMail(mailOptions);
+    await sgMail.send(msg);
     console.log(`✅ Assignment email sent to ${email}`);
   } catch (error) {
     console.error("❌ Assignment email failed:", error.message);
@@ -298,22 +278,8 @@ export const sendTicketAssignedToStaffEmail = async (
 
 // --- SERVICE & FINE EMAILS ---
 
-export const sendServicePurchaseEmail = async (
-  email,
-  name,
-  serviceDetails,
-  pdfAttachment = null,
-  attachmentName = null
-) => {
-  const {
-    serviceName,
-    price,
-    period,
-    validUntil,
-    invoiceId,
-    credentials,
-    serviceType,
-  } = serviceDetails;
+export const sendServicePurchaseEmail = async (email, name, serviceDetails, pdfAttachment = null, attachmentName = null) => {
+  const { serviceName, price, period, validUntil, invoiceId, credentials, serviceType } = serviceDetails;
 
   // Build credentials section if provided
   let credentialsHtml = "";
@@ -342,13 +308,14 @@ export const sendServicePurchaseEmail = async (
   if (pdfAttachment) {
     attachments.push({
       filename: attachmentName || "Mess_Pass.pdf",
-      content: pdfAttachment,
-      contentType: "application/pdf",
+      content: pdfAttachment.toString('base64'), // FIXED: Convert Buffer to Base64 for SendGrid
+      type: "application/pdf",                   // FIXED: Property name is 'type' in SendGrid
+      disposition: "attachment"
     });
   }
 
-  const mailOptions = {
-    from: `"Hostel Services" <${SENDER_EMAIL}>`,
+  const msg = {
+    from: { email: SENDER_EMAIL, name: "Hostel Services" },
     to: email,
     subject: `Service Activated - ${serviceName}`,
     html: `
@@ -361,11 +328,7 @@ export const sendServicePurchaseEmail = async (
           <p style="margin: 5px 0;"><strong>Service:</strong> ${serviceName}</p>
           <p style="margin: 5px 0;"><strong>Amount Paid:</strong> ₹${price}</p>
           <p style="margin: 5px 0;"><strong>Period:</strong> ${period}</p>
-          ${
-            validUntil
-              ? `<p style="margin: 5px 0;"><strong>Valid Until:</strong> ${validUntil}</p>`
-              : ""
-          }
+          ${validUntil ? `<p style="margin: 5px 0;"><strong>Valid Until:</strong> ${validUntil}</p>` : ""}
           <p style="margin: 5px 0;"><strong>Invoice ID:</strong> ${invoiceId}</p>
         </div>
         
@@ -384,7 +347,7 @@ export const sendServicePurchaseEmail = async (
   };
 
   try {
-    await transporter.sendMail(mailOptions);
+    await sgMail.send(msg);
     console.log(`✅ Service purchase email sent to ${email}`);
   } catch (error) {
     console.error("❌ Service email failed:", error.message);
@@ -394,8 +357,8 @@ export const sendServicePurchaseEmail = async (
 export const sendFineNotificationEmail = async (email, name, fineDetails) => {
   const { description, amount, dueDate, invoiceId } = fineDetails;
 
-  const mailOptions = {
-    from: `"Hostel Accounts" <${SENDER_EMAIL}>`,
+  const msg = {
+    from: { email: SENDER_EMAIL, name: "Hostel Accounts" },
     to: email,
     subject: `Fine Issued - Payment Required`,
     html: `
@@ -425,22 +388,18 @@ export const sendFineNotificationEmail = async (email, name, fineDetails) => {
   };
 
   try {
-    await transporter.sendMail(mailOptions);
+    await sgMail.send(msg);
     console.log(`✅ Fine notification sent to ${email}`);
   } catch (error) {
     console.error("❌ Fine email failed:", error.message);
   }
 };
 
-export const sendFinePaymentConfirmationEmail = async (
-  email,
-  name,
-  paymentDetails
-) => {
+export const sendFinePaymentConfirmationEmail = async (email, name, paymentDetails) => {
   const { description, amount, invoiceId, paidAt } = paymentDetails;
 
-  const mailOptions = {
-    from: `"Hostel Accounts" <${SENDER_EMAIL}>`,
+  const msg = {
+    from: { email: SENDER_EMAIL, name: "Hostel Accounts" },
     to: email,
     subject: `Payment Received - ${description}`,
     html: `
@@ -468,7 +427,7 @@ export const sendFinePaymentConfirmationEmail = async (
   };
 
   try {
-    await transporter.sendMail(mailOptions);
+    await sgMail.send(msg);
     console.log(`✅ Payment confirmation sent to ${email}`);
   } catch (error) {
     console.error("❌ Payment confirmation email failed:", error.message);
@@ -480,8 +439,8 @@ export const sendFinePaymentConfirmationEmail = async (
 export const sendPasswordResetEmail = async (email, name, resetToken) => {
   const resetUrl = `${FRONTEND_URL}/reset-password/${resetToken}`;
 
-  const mailOptions = {
-    from: `"HMS Support" <${SENDER_EMAIL}>`,
+  const msg = {
+    from: { email: SENDER_EMAIL, name: "HMS Support" },
     to: email,
     subject: "Password Reset Request - HMS",
     html: `
@@ -510,7 +469,7 @@ export const sendPasswordResetEmail = async (email, name, resetToken) => {
   };
 
   try {
-    await transporter.sendMail(mailOptions);
+    await sgMail.send(msg);
     console.log(`✅ Password reset email sent to ${email}`);
   } catch (error) {
     console.error("❌ Password reset email failed:", error.message);
@@ -519,8 +478,8 @@ export const sendPasswordResetEmail = async (email, name, resetToken) => {
 };
 
 export const sendPasswordChangedConfirmationEmail = async (email, name) => {
-  const mailOptions = {
-    from: `"HMS Support" <${SENDER_EMAIL}>`,
+  const msg = {
+    from: { email: SENDER_EMAIL, name: "HMS Support" },
     to: email,
     subject: "Password Changed Successfully - HMS",
     html: `
@@ -545,7 +504,7 @@ export const sendPasswordChangedConfirmationEmail = async (email, name) => {
   };
 
   try {
-    await transporter.sendMail(mailOptions);
+    await sgMail.send(msg);
     console.log(`✅ Password change confirmation sent to ${email}`);
   } catch (error) {
     console.error("❌ Password confirmation email failed:", error.message);
