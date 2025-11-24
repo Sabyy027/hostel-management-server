@@ -20,6 +20,7 @@ import discountRoutes from './routes/discount.routes.js';
 import expenseRoutes from './routes/expense.routes.js';
 import announcementRoutes from './routes/announcement.routes.js';
 import aiRoutes from './routes/ai.routes.js';
+import documentationRoutes from './routes/documentation.routes.js';
 
 dotenv.config();
 
@@ -59,6 +60,7 @@ app.use('/api/discounts', discountRoutes);
 app.use('/api/expenses', expenseRoutes);
 app.use('/api/announcements', announcementRoutes);
 app.use('/api/ai', aiRoutes);
+app.use('/api/documentation', documentationRoutes);
 
 
 
