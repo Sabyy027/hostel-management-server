@@ -125,7 +125,6 @@ router.post("/login", async (req, res) => {
         role: user.role,
         designation: user.designation,
         isFirstLogin: user.isFirstLogin,
-        photoUrl: user.photoUrl,
       },
       hasBooking,
     });
