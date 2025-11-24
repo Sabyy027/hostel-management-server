@@ -136,6 +136,20 @@ router.post('/staff-signup-via-link', async (req, res) => {
     // ---------------------------------------
 
     res.status(201).json({ message: 'Registration successful! Please login.' });
+
+  } catch (error) {
+    return res.status(401).json({ message: 'Invalid or Expired Invite Link' });
+  }
+});
+
+// --- UPLOAD PROFILE PICTURE ---
+router.post('/upload-profile-picture', [authMiddleware, upload.single('profilePicture')], async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: 'No image file provided' });
+    }
+
+    // Get current user
     const user = await User.findById(req.user.userId);
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
