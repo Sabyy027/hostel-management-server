@@ -121,6 +121,12 @@ async function getUserContext(userId, userRole) {
           totalRooms += rooms.length;
           occupiedRooms += occupied;
 
+          // Count Pending Check-ins
+          const pending = await Booking.countDocuments({
+            room: { $in: rooms.map(r => r._id) },
+            status: 'Pending'
+          });
+
           floorInfo.push({
             name: floor.name,
             number: floor.number,
@@ -128,7 +134,8 @@ async function getUserContext(userId, userRole) {
             type: floor.type,
             totalRooms: rooms.length,
             occupiedRooms: occupied,
-            availableRooms: rooms.length - occupied
+            pendingCheckins: pending,
+            availableRooms: rooms.length - occupied - pending
           });
         }
 
@@ -156,7 +163,10 @@ async function getUserContext(userId, userRole) {
       }
 
       // Warden context (non-RT)
-      const totalStudents = await Booking.countDocuments({ status: { $in: ['Active', 'CheckedIn', 'Paid'] } });
+      const totalRegisteredStudents = await User.countDocuments({ role: 'student' });
+      const totalActiveResidents = await Booking.countDocuments({ status: { $in: ['Active', 'CheckedIn', 'Paid'] } });
+      const totalPendingCheckins = await Booking.countDocuments({ status: 'Pending' });
+      
       const totalPendingQueries = await Query.countDocuments({ status: { $ne: 'Resolved' } });
       const highPriorityQueries = await Query.countDocuments({ priority: 'High', status: { $ne: 'Resolved' } });
       const totalPendingDues = await Invoice.aggregate([
@@ -166,7 +176,9 @@ async function getUserContext(userId, userRole) {
       
       return {
         role: 'Warden',
-        totalStudents,
+        totalRegisteredStudents,
+        totalActiveResidents,
+        totalPendingCheckins,
         pendingQueries: totalPendingQueries,
         highPriority: highPriorityQueries,
         totalDues: totalPendingDues.length > 0 ? `₹${totalPendingDues[0].total}` : '₹0'
@@ -176,7 +188,10 @@ async function getUserContext(userId, userRole) {
     // ADMIN CONTEXT
     else if (userRole === 'admin') {
       // System-wide statistics
-      const totalStudents = await Booking.countDocuments({ status: { $in: ['Active', 'CheckedIn', 'Paid'] } });
+      const totalRegisteredStudents = await User.countDocuments({ role: 'student' });
+      const totalActiveResidents = await Booking.countDocuments({ status: { $in: ['Active', 'CheckedIn', 'Paid'] } });
+      const totalPendingCheckins = await Booking.countDocuments({ status: 'Pending' });
+
       const totalPendingQueries = await Query.countDocuments({ status: { $ne: 'Resolved' } });
       const highPriorityQueries = await Query.countDocuments({ priority: 'High', status: { $ne: 'Resolved' } });
       const totalPendingDues = await Invoice.aggregate([
@@ -186,7 +201,9 @@ async function getUserContext(userId, userRole) {
       
       return {
         role: 'Administrator',
-        totalStudents,
+        totalRegisteredStudents,
+        totalActiveResidents,
+        totalPendingCheckins,
         pendingQueries: totalPendingQueries,
         highPriority: highPriorityQueries,
         totalDues: totalPendingDues.length > 0 ? `₹${totalPendingDues[0].total}` : '₹0'
@@ -295,7 +312,7 @@ router.post('/chat', authMiddleware, async (req, res) => {
     else if ((req.user.role === 'warden' || req.user.role === 'resident tutor') && userContext.role === 'Resident Tutor') {
       // Format floor details for display
       const floorsList = userContext.floors?.map(f => 
-        `${f.name} (${f.block}) - ${f.type}: ${f.totalRooms} rooms (${f.occupiedRooms} occupied, ${f.availableRooms} available)`
+        `${f.name} (${f.block}) - ${f.type}: ${f.totalRooms} rooms (${f.occupiedRooms} occupied, ${f.pendingCheckins} pending check-in, ${f.availableRooms} available)`
       ).join('\n        ') || 'None assigned';
 
       systemInstruction = `
@@ -351,7 +368,9 @@ router.post('/chat', authMiddleware, async (req, res) => {
         --- SOURCE 2: SYSTEM OVERVIEW (LIVE DATA) ---
         Administrator: ${req.user.username}
         Role: ${userContext.role || 'Administrator'}
-        Total Active Students: ${userContext.totalStudents}
+        Total Registered Students: ${userContext.totalRegisteredStudents}
+        Active Residents (Checked-in): ${userContext.totalActiveResidents}
+        Pending Check-ins: ${userContext.totalPendingCheckins}
         Pending Queries: ${userContext.pendingQueries}
         High Priority Issues: ${userContext.highPriority || 0}
         Total Pending Dues: ${userContext.totalDues}
@@ -370,7 +389,7 @@ router.post('/chat', authMiddleware, async (req, res) => {
         - For detailed reports, suggest pages naturally like "Check out the Reports Dashboard for detailed analytics!"
         - For specific student queries, suggest conversationally: "You can find student details in the Resident Manager page."
         - For financial details, mention naturally: "The Billing Dashboard has all the financial breakdowns."
-        - Example good: "You currently have 150 active students, 12 pending queries (3 high priority), and total pending dues of ₹45,000. Everything looks manageable!"
+        - Example good: "You have 150 registered students. 140 are currently active residents and 10 are pending check-in. There are 12 pending queries."
         - Example BAD: "**Students:** 150" (Don't format like this!)
       `;
     }
