@@ -21,8 +21,15 @@ router.post("/signup", async (req, res) => {
       .json({ message: "Please provide all required fields." });
   }
 
+  // 2. Password length validation
+  if (password.length < 6) {
+    return res
+      .status(400)
+      .json({ message: "Password must be at least 6 characters long." });
+  }
+
   try {
-    // 2. Check if user already exists
+    // 3. Check if user already exists
     const existingUser = await User.findOne({ $or: [{ email }, { username }] });
     if (existingUser) {
       return res
@@ -30,11 +37,11 @@ router.post("/signup", async (req, res) => {
         .json({ message: "Username or email already in use." });
     }
 
-    // 3. Hash the password
+    // 4. Hash the password
     const salt = await bcrypt.genSalt(saltRounds);
     const passwordHash = await bcrypt.hash(password, salt);
 
-    // 4. Create the new user
+    // 5. Create the new user
     const newUser = await User.create({
       username,
       email,
@@ -42,7 +49,7 @@ router.post("/signup", async (req, res) => {
       // The 'role' will be set to 'student' by default (from the model)
     });
 
-    // 5. Send a success response
+    // 6. Send a success response
     res.status(201).json({
       message: "User created successfully!",
       userId: newUser._id,
@@ -116,16 +123,17 @@ router.post("/login", async (req, res) => {
         username: user.username,
         email: user.email,
         role: user.role,
-        designation: user.designation, // <--- CRITICAL ADDITION
-        isFirstLogin: user.isFirstLogin, // <--- Include this for redirect logic
+        designation: user.designation,
+        isFirstLogin: user.isFirstLogin,
       },
-      hasBooking, // <--- Include booking status for students
+      hasBooking,
     });
   } catch (error) {
     console.error("Error during login:", error);
     res.status(500).json({ message: "Server error during login." });
   }
 });
+
 router.post('/change-password', authMiddleware, async (req, res) => {
   const { newPassword } = req.body;
 
