@@ -1,5 +1,7 @@
-import express from 'express';
 import dotenv from 'dotenv';
+dotenv.config();
+
+import express from 'express';
 import cors from 'cors';
 import mongoose from 'mongoose';
 import authRoutes from './routes/auth.routes.js';
@@ -21,8 +23,6 @@ import expenseRoutes from './routes/expense.routes.js';
 import announcementRoutes from './routes/announcement.routes.js';
 import aiRoutes from './routes/ai.routes.js';
 import documentationRoutes from './routes/documentation.routes.js';
-
-dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 4000;
